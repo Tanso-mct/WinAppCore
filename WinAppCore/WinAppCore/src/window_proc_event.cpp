@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "window_proc_event.h"
 
 void WIN_APP_CORE WACore::RegisterWPEventFuncs(WPEventSet &eventSet)

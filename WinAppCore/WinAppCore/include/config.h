@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 // DLL export and import settings.
 #define BUILDING_CRC_DLL
