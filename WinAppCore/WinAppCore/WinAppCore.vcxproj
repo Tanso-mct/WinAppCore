@@ -143,6 +143,7 @@
   <ItemGroup>
     <ClInclude Include="config.h" />
     <ClInclude Include="container.h" />
+    <ClInclude Include="event.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>

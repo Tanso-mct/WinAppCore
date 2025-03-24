@@ -57,4 +57,4 @@ public:
     void Clear() override;
 };
 
-}
+} // namespace WACore
