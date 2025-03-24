@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "container.h"
 
 int WACore::Container::Add(std::unique_ptr<WACore::IContainable> data)

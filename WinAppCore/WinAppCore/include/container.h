@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "config.h"
 
 #include <memory>
@@ -57,4 +57,4 @@ public:
     void Clear() override;
 };
 
-}
+} // namespace WACore
