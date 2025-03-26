@@ -29,6 +29,7 @@
   <ItemGroup>
     <ClInclude Include="include\config.h" />
     <ClInclude Include="include\container.h" />
+    <ClInclude Include="include\data_cast.h" />
     <ClInclude Include="include\event.h" />
     <ClInclude Include="include\pch.h" />
     <ClInclude Include="include\WACore.h" />
