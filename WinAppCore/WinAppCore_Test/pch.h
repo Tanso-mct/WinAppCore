@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <string>
-#include <string_view>
+#include "WinAppCore.h"
 
 #include "gtest/gtest.h"

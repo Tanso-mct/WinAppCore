@@ -1,7 +1,6 @@
 ﻿#include "pch.h"
 
-#include "container.h"
-#include "event.h"
+// #include "WACore.h"
 
 class Item : public WACore::IContainable
 {

@@ -1,7 +1,5 @@
 ﻿#include "pch.h"
 
-#include "WACore.h"
-
 static WACore::WPEventSet gWPEventSet;
 
 static LRESULT CALLBACK WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
