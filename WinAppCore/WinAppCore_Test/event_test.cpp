@@ -1,6 +1,6 @@
 ﻿#include "pch.h"
 
-// #include "WACore.h"
+#include "WACore.h"
 
 class Item : public WACore::IContainable
 {

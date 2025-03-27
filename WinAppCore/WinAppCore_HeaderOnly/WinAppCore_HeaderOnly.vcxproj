@@ -129,7 +129,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="WinAppCore.h" />
+    <ClInclude Include="include\console_output.h" />
+    <ClInclude Include="include\container.h" />
+    <ClInclude Include="include\data_cast.h" />
+    <ClInclude Include="include\event.h" />
+    <ClInclude Include="WinAppCore.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

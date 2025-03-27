@@ -287,7 +287,11 @@ public:
     Container(const Container&) = delete;
     Container& operator=(const Container&) = delete;
 
-    int Add(std::unique_ptr<IContainable> data);
+    int Add(std::unique_ptr<IContainable> data)
+    {
+        datas_.emplace_back(std::move(data));
+        return datas_.size() - 1;
+    }
     HRESULT Del(int id) override
     {
         if (id < 0 || id >= datas_.size()) return E_FAIL;
