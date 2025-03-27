@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\config.cpp" />
+    <ClCompile Include="src\console_output.cpp" />
     <ClCompile Include="src\container.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -28,6 +30,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\config.h" />
+    <ClInclude Include="include\console_output.h" />
     <ClInclude Include="include\container.h" />
     <ClInclude Include="include\data_cast.h" />
     <ClInclude Include="include\event.h" />

@@ -105,6 +105,7 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="console_output_test.cpp" />
     <ClCompile Include="container_test.cpp" />
     <ClCompile Include="data_cast_test.cpp" />
     <ClCompile Include="event_test.cpp" />
