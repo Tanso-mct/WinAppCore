@@ -21,6 +21,36 @@ public:
     
     virtual HRESULT Add(FUNC_KEY funcKey, void (EVENT::*func)(Args...)) = 0;
     virtual HRESULT Del(FUNC_KEY funcKey) = 0;
+
+    virtual int GetSize() = 0;
+    virtual void Clear() = 0;
+};
+
+template <typename EVENT_KEY, typename EVENT>
+class IEventInstTable
+{
+public:
+    virtual ~IEventInstTable() = default;
+
+    virtual bool Has(EVENT_KEY key) = 0;
+    virtual std::unique_ptr<EVENT>& Get(EVENT_KEY key, int id) = 0;
+
+    virtual int Add(EVENT_KEY key, std::unique_ptr<EVENT> event) = 0;
+    virtual HRESULT Del(EVENT_KEY key, int id) = 0;
+
+    virtual std::unique_ptr<EVENT> Take(EVENT_KEY key, int id) = 0;
+    virtual HRESULT Put(EVENT_KEY key, int id, std::unique_ptr<EVENT> event) = 0;
+
+    virtual int GetSize() = 0;
+    virtual void Clear() = 0;
+};
+
+template <typename EVENT_KEY, typename FUNC_KEY, typename... Args>
+class IEventCaller
+{
+public:
+    virtual ~IEventCaller() = default;
+    virtual void Call(EVENT_KEY eventKey, FUNC_KEY funcKey, Args... args) = 0;
 };
 
 template <typename FUNC_KEY, typename EVENT, typename... Args>
@@ -63,22 +93,16 @@ public:
         funcs_.erase(funcKey);
         return S_OK;
     }
-};
 
-template <typename EVENT_KEY, typename EVENT>
-class IEventInstTable
-{
-public:
-    virtual ~IEventInstTable() = default;
+    virtual int GetSize() override
+    {
+        return funcs_.size();
+    }
 
-    virtual bool Has(EVENT_KEY key) = 0;
-    virtual std::unique_ptr<EVENT>& Get(EVENT_KEY key, int id) = 0;
-
-    virtual int Add(EVENT_KEY key, std::unique_ptr<EVENT> event) = 0;
-    virtual HRESULT Del(EVENT_KEY key, int id) = 0;
-
-    virtual std::unique_ptr<EVENT> Take(EVENT_KEY key, int id) = 0;
-    virtual HRESULT Put(EVENT_KEY key, int id, std::unique_ptr<EVENT> event) = 0;
+    virtual void Clear() override
+    {
+        funcs_.clear();
+    }
 };
 
 template <typename EVENT_KEY, typename EVENT>
@@ -96,66 +120,62 @@ public:
     EventInstTable(const EventInstTable&) = delete;
     EventInstTable& operator=(const EventInstTable&) = delete;
 
-    virtual bool Has(EVENT_KEY key) override
+    virtual bool Has(EVENT_KEY eventKey) override
     {
-        return events_.find(key) != events_.end();
+        return events_.find(eventKey) != events_.end();
     }
 
-    virtual std::unique_ptr<EVENT>& Get(EVENT_KEY key, int id) override
+    virtual std::unique_ptr<EVENT>& Get(EVENT_KEY eventKey, int id) override
     {
-        if (events_.find(key) == events_.end()) return emptyEvent_; // Key not found.
-        if (id < 0 || id >= events_[key].size()) return emptyEvent_; // Invalid id.
+        if (events_.find(eventKey) == events_.end()) return emptyEvent_; // Key not found.
+        if (id < 0 || id >= events_[eventKey].size()) return emptyEvent_; // Invalid id.
 
-        return events_[key][id];
+        return events_[eventKey][id];
     }
 
-    virtual int Add(EVENT_KEY key, std::unique_ptr<EVENT> event) override
+    virtual int Add(EVENT_KEY eventKey, std::unique_ptr<EVENT> event) override
     {   
-        if (events_.find(eventKey) == events_.end())
-        {
-            // Key not found, create a new key.
-            events_[eventKey] = std::make_pair(std::vector<std::unique_ptr<EVENT>>(), nullptr);
-        }
-
-        events_[key].emplace_back(std::move(event));
-        return events_[key].size() - 1;
+        events_[eventKey].emplace_back(std::move(event));
+        return events_[eventKey].size() - 1;
     }
 
-    virtual HRESULT Del(EVENT_KEY key, int id) override
+    virtual HRESULT Del(EVENT_KEY eventKey, int id) override
     {
-        if (events_.find(key) == events_.end()) return E_FAIL; // Key not found.
-        if (id < 0 || id >= events_[key].size()) return E_FAIL; // Invalid id.
+        if (events_.find(eventKey) == events_.end()) return E_FAIL; // Key not found.
+        if (id < 0 || id >= events_[eventKey].size()) return E_FAIL; // Invalid id.
 
-        events_[key][id].reset();
+        events_[eventKey][id].reset();
         return S_OK;
     }
 
-    virtual std::unique_ptr<EVENT> Take(EVENT_KEY key, int id) override
+    virtual std::unique_ptr<EVENT> Take(EVENT_KEY eventKey, int id) override
     {
-        if (events_.find(key) == events_.end()) return nullptr; // Key not found.
-        if (id < 0 || id >= events_[key].size()) return nullptr; // Invalid id.
+        if (events_.find(eventKey) == events_.end()) return nullptr; // Key not found.
+        if (id < 0 || id >= events_[eventKey].size()) return nullptr; // Invalid id.
 
-        std::unique_ptr<EVENT> event = std::move(events_[key][id]);
-        events_[key][id] = nullptr;
+        std::unique_ptr<EVENT> event = std::move(events_[eventKey][id]);
+        events_[eventKey][id] = nullptr;
         return event;
     }
 
-    virtual HRESULT Put(EVENT_KEY key, int id, std::unique_ptr<EVENT> event) override
+    virtual HRESULT Put(EVENT_KEY eventKey, int id, std::unique_ptr<EVENT> event) override
     {
-        if (events_.find(key) == events_.end()) return E_FAIL; // Key not found.
-        if (id < 0 || id >= events_[key].size()) return E_FAIL; // Invalid id.
+        if (events_.find(eventKey) == events_.end()) return E_FAIL; // Key not found.
+        if (id < 0 || id >= events_[eventKey].size()) return E_FAIL; // Invalid id.
 
-        events_[key][id] = std::move(event);
+        events_[eventKey][id] = std::move(event);
         return S_OK;
     }
-};
 
-template <typename EVENT_KEY, typename FUNC_KEY, typename... Args>
-class IEventCaller
-{
-public:
-    virtual ~IEventCaller() = default;
-    virtual void Call(EVENT_KEY eventKey, FUNC_KEY funcKey, Args... args) = 0;
+    virtual int GetSize() override
+    {
+        return events_.size();
+    }
+
+    virtual void Clear() override
+    {
+        events_.clear();
+    }
 };
 
 template <typename EVENT_KEY, typename FUNC_KEY, typename EVENT, typename... Args>
@@ -186,11 +206,11 @@ public:
 
         if (!funcTable_->Has(funcKey)) return; // Function key not found.
         if (!instTable_->Has(eventKey)) return; // Event key not found.
-        
-        for (int i = 0; i < instTable_->events_[eventKey].size(); i++) // Call all events with the key.
+
+        for (int i = 0; i < instTable_->GetSize(); i++) // Call all events with the key.
         {
-            if (instTable_->Get(eventKey)[i] == nullptr) continue; // Skip null events.
-            (instTable_->Get(eventKey)[i].get()->*(funcTable_->Get(funcKey)))(args...);
+            if (instTable_->Get(eventKey, i) == nullptr) continue; // Skip null events.
+            (instTable_->Get(eventKey, i).get()->*(funcTable_->Get(funcKey)))(args...);
         }
     }
 };

@@ -13,8 +13,6 @@
 namespace WACore
 {
 
-constexpr int ID_INVALID = -1;
-
 class WIN_APP_CORE CoutConfig
 {
 public:

@@ -2,11 +2,12 @@
 
 #include "WACore.h"
 
-static WACore::WPEventSet gWPEventSet;
+static std::unique_ptr<WACore::IContainer> gContainer = nullptr;
+static WACore::WPEventCaller gWPEventCaller;
 
 static LRESULT CALLBACK WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    gWPEventSet.Call(hWnd, msg, msg, wParam, lParam);
+    gWPEventCaller.Call(hWnd, msg, gContainer, msg, wParam, lParam);
 
     switch (msg)
     {
@@ -87,7 +88,7 @@ public:
 
     void OnMouse(std::unique_ptr<WACore::IContainer>& container, UINT msg, WPARAM wParam, LPARAM lParam) override
     {
-        std::cout << "Mouse event." << std::endl;
+        // std::cout << "Mouse event." << std::endl;
     }
 };
 
@@ -130,16 +131,12 @@ TEST(WinAppCore_window_procedure_event, WPEventCall)
     ShowWindow(hWnd, SW_SHOW);
     UpdateWindow(hWnd);
 
-    // Support functions are used to register event functions.
-    WACore::RegisterWPEventFuncs(gWPEventSet);
+    WACore::AddWPEventInsts(hWnd, std::make_unique<WindowEvent>(), gWPEventCaller.instTable_);
+    WACore::AddWPEventFuncs(gWPEventCaller.funcTable_);
 
-    gWPEventSet.Caller()->AddKey(hWnd);
-    gWPEventSet.Caller()->AddEvent(hWnd, std::make_unique<WindowEvent>());
-
-    std::unique_ptr<WACore::IContainer> container = std::make_unique<WACore::Container>();
-    container->Add(std::make_unique<Item>("Item1"));
-    container->Add(std::make_unique<Item>("Item2"));
-    gWPEventSet.Caller()->AddContainer(hWnd, std::move(container));
+    gContainer = std::make_unique<WACore::Container>();
+    gContainer->Add(std::make_unique<Item>("Item1"));
+    gContainer->Add(std::make_unique<Item>("Item2"));
 
     MSG msg = {};
     while (msg.message != WM_QUIT)

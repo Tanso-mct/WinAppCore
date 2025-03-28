@@ -7,7 +7,7 @@
 
 #include "container.h"
 #include "event.h"
-#include "window_proc_event.h"
-
 #include "data_cast.h"
 #include "console_output.h"
+
+#include "window_proc_event.h"

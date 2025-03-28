@@ -10,123 +10,208 @@
 namespace WACore
 {
 
-template <typename EVENT_KEY, typename EVENT, typename... Args>
-class WIN_APP_CORE EventCaller
+template <typename FUNC_KEY, typename EVENT, typename... Args>
+class IEventFuncTable
+{
+public:
+    virtual ~IEventFuncTable() = default;
+
+    virtual bool Has(FUNC_KEY funcKey) = 0;
+    virtual void(EVENT::*Get(FUNC_KEY funcKey))(Args...) = 0;
+    
+    virtual HRESULT Add(FUNC_KEY funcKey, void (EVENT::*func)(Args...)) = 0;
+    virtual HRESULT Del(FUNC_KEY funcKey) = 0;
+
+    virtual int GetSize() = 0;
+    virtual void Clear() = 0;
+};
+
+template <typename EVENT_KEY, typename EVENT>
+class IEventInstTable
+{
+public:
+    virtual ~IEventInstTable() = default;
+
+    virtual bool Has(EVENT_KEY key) = 0;
+    virtual std::unique_ptr<EVENT>& Get(EVENT_KEY key, int id) = 0;
+
+    virtual int Add(EVENT_KEY key, std::unique_ptr<EVENT> event) = 0;
+    virtual HRESULT Del(EVENT_KEY key, int id) = 0;
+
+    virtual std::unique_ptr<EVENT> Take(EVENT_KEY key, int id) = 0;
+    virtual HRESULT Put(EVENT_KEY key, int id, std::unique_ptr<EVENT> event) = 0;
+
+    virtual int GetSize() = 0;
+    virtual void Clear() = 0;
+};
+
+template <typename EVENT_KEY, typename FUNC_KEY, typename... Args>
+class IEventCaller
+{
+public:
+    virtual ~IEventCaller() = default;
+    virtual void Call(EVENT_KEY eventKey, FUNC_KEY funcKey, Args... args) = 0;
+};
+
+template <typename FUNC_KEY, typename EVENT, typename... Args>
+class EventFuncTable : public IEventFuncTable<FUNC_KEY, EVENT, Args...>
 {
 private:
-    std::unordered_map
-    <
-        EVENT_KEY, 
-        std::pair<std::vector<std::unique_ptr<EVENT>>, std::unique_ptr<IContainer>>
-    > eventTable_;
-
-    inline std::vector<std::unique_ptr<EVENT>>& Events(EVENT_KEY key)
-    {
-        return eventTable_[key].first;
-    }
-
-    inline std::unique_ptr<EVENT>& Event(EVENT_KEY key, int id)
-    {
-        return eventTable_[key].first[id];
-    }
-
-    inline std::unique_ptr<IContainer>& Container(EVENT_KEY key)
-    {
-        return eventTable_[key].second;
-    }
+    std::unordered_map<FUNC_KEY, void (EVENT::*)(Args...)> funcs_;
 
 public:
-    EventCaller() = default;
-    virtual ~EventCaller() = default;
+    EventFuncTable() = default;
+    virtual ~EventFuncTable() override = default;
 
     // Delete copy constructor and operator=.
-    EventCaller(const EventCaller&) = delete;
-    EventCaller& operator=(const EventCaller&) = delete;
+    EventFuncTable(const EventFuncTable&) = delete;
+    EventFuncTable& operator=(const EventFuncTable&) = delete;
 
-    HRESULT AddKey(EVENT_KEY key)
+    virtual bool Has(FUNC_KEY funcKey) override
     {
-        if (eventTable_.find(key) != eventTable_.end()) return E_FAIL;
+        return funcs_.find(funcKey) != funcs_.end();
+    }
 
-        eventTable_[key] = std::make_pair(std::vector<std::unique_ptr<EVENT>>(), nullptr);
+    virtual void(EVENT::*Get(FUNC_KEY funcKey))(Args...) override
+    {
+        if (funcs_.find(funcKey) == funcs_.end()) return nullptr; // Key not found.
+        return funcs_[funcKey];
+    }
+
+    virtual HRESULT Add(FUNC_KEY funcKey, void (EVENT::*func)(Args...)) override
+    {
+        if (funcs_.find(funcKey) != funcs_.end()) return E_FAIL; // Key already exists.
+
+        funcs_[funcKey] = func;
         return S_OK;
     }
 
-    int AddEvent(EVENT_KEY key, std::unique_ptr<EVENT> event)
-    {   
-        if (eventTable_.find(key) == eventTable_.end()) return WACore::ID_INVALID;
+    virtual HRESULT Del(FUNC_KEY funcKey) override
+    {
+        if (funcs_.find(funcKey) == funcs_.end()) return E_FAIL; // Key not found.
 
-        Events(key).emplace_back(std::move(event));
-        return Events(key).size() - 1;
+        funcs_.erase(funcKey);
+        return S_OK;
     }
 
-    std::unique_ptr<EVENT> TakeEvent(EVENT_KEY key, int id)
+    virtual int GetSize() override
     {
-        if (eventTable_.find(key) == eventTable_.end()) return nullptr;
-        if (id < 0 || id >= Events(key).size()) return nullptr;
+        return funcs_.size();
+    }
 
-        std::unique_ptr<EVENT> event = std::move(Event(key, id));
+    virtual void Clear() override
+    {
+        funcs_.clear();
+    }
+};
+
+template <typename EVENT_KEY, typename EVENT>
+class EventInstTable : public IEventInstTable<EVENT_KEY, EVENT>
+{
+private:
+    std::unordered_map<EVENT_KEY, std::vector<std::unique_ptr<EVENT>>> events_;
+    std::unique_ptr<EVENT> emptyEvent_ = nullptr;
+
+public:
+    EventInstTable() = default;
+    virtual ~EventInstTable() override = default;
+
+    // Delete copy constructor and operator=.
+    EventInstTable(const EventInstTable&) = delete;
+    EventInstTable& operator=(const EventInstTable&) = delete;
+
+    virtual bool Has(EVENT_KEY eventKey) override
+    {
+        return events_.find(eventKey) != events_.end();
+    }
+
+    virtual std::unique_ptr<EVENT>& Get(EVENT_KEY eventKey, int id) override
+    {
+        if (events_.find(eventKey) == events_.end()) return emptyEvent_; // Key not found.
+        if (id < 0 || id >= events_[eventKey].size()) return emptyEvent_; // Invalid id.
+
+        return events_[eventKey][id];
+    }
+
+    virtual int Add(EVENT_KEY eventKey, std::unique_ptr<EVENT> event) override
+    {   
+        events_[eventKey].emplace_back(std::move(event));
+        return events_[eventKey].size() - 1;
+    }
+
+    virtual HRESULT Del(EVENT_KEY eventKey, int id) override
+    {
+        if (events_.find(eventKey) == events_.end()) return E_FAIL; // Key not found.
+        if (id < 0 || id >= events_[eventKey].size()) return E_FAIL; // Invalid id.
+
+        events_[eventKey][id].reset();
+        return S_OK;
+    }
+
+    virtual std::unique_ptr<EVENT> Take(EVENT_KEY eventKey, int id) override
+    {
+        if (events_.find(eventKey) == events_.end()) return nullptr; // Key not found.
+        if (id < 0 || id >= events_[eventKey].size()) return nullptr; // Invalid id.
+
+        std::unique_ptr<EVENT> event = std::move(events_[eventKey][id]);
+        events_[eventKey][id] = nullptr;
         return event;
     }
 
-    HRESULT AddContainer(EVENT_KEY key, std::unique_ptr<IContainer> container)
+    virtual HRESULT Put(EVENT_KEY eventKey, int id, std::unique_ptr<EVENT> event) override
     {
-        if (eventTable_.find(key) == eventTable_.end()) return E_FAIL;
+        if (events_.find(eventKey) == events_.end()) return E_FAIL; // Key not found.
+        if (id < 0 || id >= events_[eventKey].size()) return E_FAIL; // Invalid id.
 
-        Container(key) = std::move(container);
+        events_[eventKey][id] = std::move(event);
         return S_OK;
     }
 
-    std::unique_ptr<IContainer> TakeContainer(EVENT_KEY key)
+    virtual int GetSize() override
     {
-        if (eventTable_.find(key) == eventTable_.end()) return nullptr;
-
-        std::unique_ptr<IContainer> container = std::move(Container(key));
-        return container;
+        return events_.size();
     }
 
-    void Call(EVENT_KEY key, void (EVENT::*func)(std::unique_ptr<IContainer>&, Args...), Args... args)
+    virtual void Clear() override
     {
-        if (eventTable_.find(key) == eventTable_.end()) return;
-        for (int i = 0; i < Events(key).size(); i++)
-        {
-            if (Event(key, i) == nullptr) continue;
-            (Event(key, i).get()->*func)(Container(key), args...);
-        }
+        events_.clear();
     }
 };
 
 template <typename EVENT_KEY, typename FUNC_KEY, typename EVENT, typename... Args>
-class WIN_APP_CORE EventSet
+class EventCaller : public IEventCaller<EVENT_KEY, FUNC_KEY, Args...>
 {
-private:
-    std::unordered_map<FUNC_KEY, void (EVENT::*)(std::unique_ptr<IContainer>&, Args...)> funcs_;
-    std::unique_ptr<EventCaller<EVENT_KEY, EVENT, Args...>> caller_ = nullptr;
-
 public:
-    EventSet()
+    std::unique_ptr<IEventFuncTable<FUNC_KEY, EVENT, Args...>> funcTable_ = nullptr;
+    std::unique_ptr<IEventInstTable<EVENT_KEY, EVENT>> instTable_ = nullptr;
+
+    EventCaller()
     {
-        caller_ = std::make_unique<EventCaller<EVENT_KEY, EVENT, Args...>>();
-    }
-    virtual ~EventSet() = default;
-
-    // Delete copy constructor and operator=.
-    EventSet(const EventSet&) = delete;
-    EventSet& operator=(const EventSet&) = delete;
-
-    HRESULT AddFunc(FUNC_KEY key, void (EVENT::*func)(std::unique_ptr<IContainer>&, Args...))
-    {
-        if (funcs_.find(key) != funcs_.end()) return E_FAIL;
-
-        funcs_[key] = func;
-        return S_OK;
+        funcTable_ = std::make_unique<EventFuncTable<FUNC_KEY, EVENT, Args...>>();
+        instTable_ = std::make_unique<EventInstTable<EVENT_KEY, EVENT>>();
     }
 
-    const std::unique_ptr<EventCaller<EVENT_KEY, EVENT, Args...>>& Caller() const { return caller_; }
+    EventCaller
+    (
+        std::unique_ptr<IEventFuncTable<FUNC_KEY, EVENT, Args...>> funcTable, 
+        std::unique_ptr<IEventInstTable<EVENT_KEY, EVENT>> instTable
+    ) : funcTable_(std::move(funcTable)), instTable_(std::move(instTable)) {}
 
-    void Call(EVENT_KEY key, FUNC_KEY funcKey, Args... args)
+    virtual ~EventCaller() override = default;
+
+    virtual void Call(EVENT_KEY eventKey, FUNC_KEY funcKey, Args... args) override
     {
-        if (funcs_.find(funcKey) == funcs_.end()) return;
-        caller_->Call(key, funcs_[funcKey], args...);
+        if (!funcTable_) return; // Function table not found.
+        if (!instTable_) return; // Instance table not found.
+
+        if (!funcTable_->Has(funcKey)) return; // Function key not found.
+        if (!instTable_->Has(eventKey)) return; // Event key not found.
+
+        for (int i = 0; i < instTable_->GetSize(); i++) // Call all events with the key.
+        {
+            if (instTable_->Get(eventKey, i) == nullptr) continue; // Skip null events.
+            (instTable_->Get(eventKey, i).get()->*(funcTable_->Get(funcKey)))(args...);
+        }
     }
 };
 
