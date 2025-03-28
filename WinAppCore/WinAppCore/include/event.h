@@ -11,7 +11,7 @@ namespace WACore
 {
 
 template <typename FUNC_KEY, typename EVENT, typename... Args>
-class IEventFuncTable
+class WIN_APP_CORE IEventFuncTable
 {
 public:
     virtual ~IEventFuncTable() = default;
@@ -27,7 +27,7 @@ public:
 };
 
 template <typename EVENT_KEY, typename EVENT>
-class IEventInstTable
+class WIN_APP_CORE IEventInstTable
 {
 public:
     virtual ~IEventInstTable() = default;
@@ -46,7 +46,7 @@ public:
 };
 
 template <typename EVENT_KEY, typename FUNC_KEY, typename... Args>
-class IEventCaller
+class WIN_APP_CORE IEventCaller
 {
 public:
     virtual ~IEventCaller() = default;
@@ -54,7 +54,7 @@ public:
 };
 
 template <typename FUNC_KEY, typename EVENT, typename... Args>
-class EventFuncTable : public IEventFuncTable<FUNC_KEY, EVENT, Args...>
+class WIN_APP_CORE EventFuncTable : public IEventFuncTable<FUNC_KEY, EVENT, Args...>
 {
 private:
     std::unordered_map<FUNC_KEY, void (EVENT::*)(Args...)> funcs_;
@@ -106,7 +106,7 @@ public:
 };
 
 template <typename EVENT_KEY, typename EVENT>
-class EventInstTable : public IEventInstTable<EVENT_KEY, EVENT>
+class WIN_APP_CORE EventInstTable : public IEventInstTable<EVENT_KEY, EVENT>
 {
 private:
     std::unordered_map<EVENT_KEY, std::vector<std::unique_ptr<EVENT>>> events_;
@@ -179,7 +179,7 @@ public:
 };
 
 template <typename EVENT_KEY, typename FUNC_KEY, typename EVENT, typename... Args>
-class EventCaller : public IEventCaller<EVENT_KEY, FUNC_KEY, Args...>
+class WIN_APP_CORE EventCaller : public IEventCaller<EVENT_KEY, FUNC_KEY, Args...>
 {
 public:
     std::unique_ptr<IEventFuncTable<FUNC_KEY, EVENT, Args...>> funcTable_ = nullptr;
