@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\config.cpp" />
     <ClCompile Include="src\console_output.cpp" />
     <ClCompile Include="src\container.cpp" />
     <ClCompile Include="src\pch.cpp">
