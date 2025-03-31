@@ -41,7 +41,9 @@ public:
     virtual std::unique_ptr<EVENT> Take(EVENT_KEY key, int id) = 0;
     virtual HRESULT Put(EVENT_KEY key, int id, std::unique_ptr<EVENT> event) = 0;
 
-    virtual int GetSize() = 0;
+    virtual int GetKeyCount() = 0;
+    virtual int GetInstCount(EVENT_KEY key) = 0;
+
     virtual void Clear() = 0;
 };
 
@@ -167,9 +169,16 @@ public:
         return S_OK;
     }
 
-    virtual int GetSize() override
+    virtual int GetKeyCount() override
     {
         return events_.size();
+    }
+
+    virtual int GetInstCount(EVENT_KEY eventKey) override
+    {
+        if (events_.find(eventKey) == events_.end()) return 0; // Key not found.
+
+        return events_[eventKey].size();
     }
 
     virtual void Clear() override
@@ -207,7 +216,7 @@ public:
         if (!funcTable_->Has(funcKey)) return; // Function key not found.
         if (!instTable_->Has(eventKey)) return; // Event key not found.
 
-        for (int i = 0; i < instTable_->GetSize(); i++) // Call all events with the key.
+        for (int i = 0; i < instTable_->GetInstCount(eventKey); i++) // Call all events with the key.
         {
             if (instTable_->Get(eventKey, i) == nullptr) continue; // Skip null events.
             (instTable_->Get(eventKey, i).get()->*(funcTable_->Get(funcKey)))(args...);
