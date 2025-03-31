@@ -39,3 +39,39 @@ void WIN_APP_CORE WACore::AddWPEventFuncs
     funcTable->Add(WM_MOUSEWHEEL, &IWPEvent::OnMouse);
     funcTable->Add(WM_MOUSEMOVE, &IWPEvent::OnMouse);
 }
+
+void WACore::IWPEvent::OnSetFocus(std::unique_ptr<IContainer> &container, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+}
+
+void WACore::IWPEvent::OnKillFocus(std::unique_ptr<IContainer> &container, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+}
+
+void WACore::IWPEvent::OnSize(std::unique_ptr<IContainer> &container, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+}
+
+void WACore::IWPEvent::OnUpdate(std::unique_ptr<IContainer> &container, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+}
+
+void WACore::IWPEvent::OnMove(std::unique_ptr<IContainer> &container, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+}
+
+void WACore::IWPEvent::OnDestroy(std::unique_ptr<IContainer> &container, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+}
+
+void WACore::IWPEvent::OnKeyDown(std::unique_ptr<IContainer> &container, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+}
+
+void WACore::IWPEvent::OnKeyUp(std::unique_ptr<IContainer> &container, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+}
+
+void WACore::IWPEvent::OnMouse(std::unique_ptr<IContainer> &container, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+}
