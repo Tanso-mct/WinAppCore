@@ -2,52 +2,71 @@
 
 #include "WACore.h"
 
-TEST(WinAppCore_console, EditConfig)
-{
-    WACore::CoutConfig::START_TAG() = "[ TEST     ]";
-    EXPECT_TRUE(true);
-}
-
 TEST(WinAppCore_console, Cout)
 {
-    WACore::Cout({"Normal Message. This is one line."});
-    WACore::Cout({"Normal Message", "This is multiple lines."});
+    std::unique_ptr<WACore::IConsoleOuter> consoleOuter = std::make_unique<WACore::ConsoleOuter>();
+    consoleOuter->Cout({"Normal Message. This is one line."});
+    consoleOuter->Cout({"Normal Message", "This is multiple lines."});
     EXPECT_TRUE(true);
 }
 
 TEST(WinAppCore_console, CoutError)
 {
-    WACore::CoutErr({"Error Message. This is one line."});
-    WACore::CoutErr({"Error Message", "This is multiple lines."});
+    std::unique_ptr<WACore::IConsoleOuter> consoleOuter = std::make_unique<WACore::ConsoleOuter>();
+    consoleOuter->CoutErr({"Error Message. This is one line."});
+    consoleOuter->CoutErr({"Error Message", "This is multiple lines."});
     EXPECT_TRUE(true);
 }
 
 TEST(WinAppCore_console, CoutWarning)
 {
-    WACore::CoutWrn({"Warning Message. This is one line."});
-    WACore::CoutWrn({"Warning Message", "This is multiple lines."});
+    std::unique_ptr<WACore::IConsoleOuter> consoleOuter = std::make_unique<WACore::ConsoleOuter>();
+    consoleOuter->CoutWrn({"Warning Message. This is one line."});
+    consoleOuter->CoutWrn({"Warning Message", "This is multiple lines."});
     EXPECT_TRUE(true);
 }
 
 TEST(WinAppCore_console, CoutInfo)
 {
-    WACore::CoutInfo({"Info Message. This is one line."});
-    WACore::CoutInfo({"Info Message", "This is multiple lines."});
+    std::unique_ptr<WACore::IConsoleOuter> consoleOuter = std::make_unique<WACore::ConsoleOuter>();
+    consoleOuter->CoutInfo({"Info Message. This is one line."});
+    consoleOuter->CoutInfo({"Info Message", "This is multiple lines."});
     EXPECT_TRUE(true);
 }
 
 TEST(WinAppCore_console, CoutDebug)
 {
-    WACore::CoutDebug({"Debug Message. This is one line."});
-    WACore::CoutDebug({"Debug Message", "This is multiple lines."});
+    std::unique_ptr<WACore::IConsoleOuter> consoleOuter = std::make_unique<WACore::ConsoleOuter>();
+    consoleOuter->CoutDebug({"Debug Message. This is one line."});
+    consoleOuter->CoutDebug({"Debug Message", "This is multiple lines."});
     EXPECT_TRUE(true);
+}
+
+TEST(WinAppCore_console, EditSettting)
+{
+    std::unique_ptr<WACore::ConsoleOuter> consoleOuter = std::make_unique<WACore::ConsoleOuter>();
+    consoleOuter->startTag_ = "[ TEST     ]";
+
+    consoleOuter->Cout({"Normal Message."});
+    consoleOuter->CoutErr({"Error Message."});
+    consoleOuter->CoutWrn({"Warning Message."});
+    consoleOuter->CoutInfo({"Info Message."});
+    consoleOuter->CoutDebug({"Debug Message."});
 }
 
 TEST(WinAppCore_console, IssueNotification)
 {
-    WACore::IssueNotifier issueNotifier;
+    std::unique_ptr<WACore::IConsoleOuter> consoleOuter = std::make_unique<WACore::ConsoleOuter>();
 
-    WACore::Cout({"Normal Message"});
-    WACore::CoutErr({"Error Message"});
-    WACore::CoutWrn({"Warning Message"});
+    std::unique_ptr<WACore::IIssueNotifier> issueNotifier = std::make_unique<WACore::IssueNotifier>
+    (
+        consoleOuter->GetErrorCount(), 
+        consoleOuter->GetWarningCount()
+    );
+
+    consoleOuter->Cout({"Normal Message."});
+    consoleOuter->CoutErr({"Error Message."});
+    consoleOuter->CoutWrn({"Warning Message."});
+    consoleOuter->CoutInfo({"Info Message."});
+    consoleOuter->CoutDebug({"Debug Message."});
 }

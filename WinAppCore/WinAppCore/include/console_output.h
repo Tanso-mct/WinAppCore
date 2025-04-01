@@ -9,36 +9,75 @@
 namespace WACore
 {
 
-class WIN_APP_CORE CoutConfig
+class WIN_APP_CORE IIssueNotifier
 {
 public:
-    static std::string& START_TAG();
-    static std::string& END_TAG();
-
-    static std::string& COLOR_NORMAL();
-    static std::string& COLOR_ERROR();
-    static std::string& COLOR_WARNING();
-    static std::string& COLOR_INFO();
-    static std::string& COLOR_DEBUG();
-
-    static std::string& COLOR_RESET();
+    virtual ~IIssueNotifier() = default;
+    virtual void Notify() const = 0;
 };
 
-WIN_APP_CORE unsigned int& ErrorCount();
-WIN_APP_CORE unsigned int& WarningCount();
-
-class WIN_APP_CORE IssueNotifier
+class WIN_APP_CORE IConsoleOuter
 {
 public:
-    IssueNotifier();
-    IssueNotifier(unsigned int errorCount, unsigned int warningCount);
-    virtual ~IssueNotifier();
+    virtual ~IConsoleOuter() = default;
+
+    virtual const unsigned int& GetErrorCount() const = 0;
+    virtual const unsigned int& GetWarningCount() const = 0;
+
+    virtual void Cout(std::initializer_list<std::string_view> args) = 0;
+    virtual void CoutErr(std::initializer_list<std::string_view> args) = 0;
+    virtual void CoutWrn(std::initializer_list<std::string_view> args) = 0;
+    virtual void CoutInfo(std::initializer_list<std::string_view> args) = 0;
+    virtual void CoutDebug(std::initializer_list<std::string_view> args) = 0;
 };
 
-WIN_APP_CORE void Cout(std::initializer_list<std::string_view> args);
-WIN_APP_CORE void CoutErr(std::initializer_list<std::string_view> args);
-WIN_APP_CORE void CoutWrn(std::initializer_list<std::string_view> args);
-WIN_APP_CORE void CoutInfo(std::initializer_list<std::string_view> args);
-WIN_APP_CORE void CoutDebug(std::initializer_list<std::string_view> args);
+class WIN_APP_CORE IssueNotifier : public IIssueNotifier
+{
+private:
+    const unsigned int& errorCount_;
+    const unsigned int& warningCount_;
+
+    std::string colNormal_;
+    std::string colReset_;
+
+public:
+    IssueNotifier() = delete;
+
+    IssueNotifier(const unsigned int& errorCount, const unsigned int& warningCount);
+    ~IssueNotifier() override;
+
+    void Notify() const override;
+};
+
+class WIN_APP_CORE ConsoleOuter : public IConsoleOuter
+{
+private:
+    unsigned int errorCount_ = 0;
+    unsigned int warningCount_ = 0;
+    
+public:
+    ConsoleOuter();
+    ConsoleOuter(unsigned int errorCount, unsigned int warningCount);
+    ~ConsoleOuter() override = default;
+
+    std::string startTag_;
+    std::string endTag_;
+
+    std::string colReset_;
+    std::string colNormal_;
+    std::string colError_;
+    std::string colWarning_;
+    std::string colInfo_;
+    std::string colDebug_;
+
+    const unsigned int& GetErrorCount() const override;
+    const unsigned int& GetWarningCount() const override;
+
+    void Cout(std::initializer_list<std::string_view> args) override;
+    void CoutErr(std::initializer_list<std::string_view> args) override;
+    void CoutWrn(std::initializer_list<std::string_view> args) override;
+    void CoutInfo(std::initializer_list<std::string_view> args) override;
+    void CoutDebug(std::initializer_list<std::string_view> args) override;
+};
 
 } // namespace WACore
