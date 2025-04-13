@@ -1,6 +1,6 @@
-﻿#include "pch.h"
-
-#include "WACore.h"
+﻿#include "WinAppCore_Test/pch.h"
+#include "WinAppCore/include/WACore.h"
+#pragma comment(lib, "WinAppCore.lib")
 
 static std::unique_ptr<WACore::IContainer> gContainer = nullptr;
 static WACore::WPEventCaller gWPEventCaller;

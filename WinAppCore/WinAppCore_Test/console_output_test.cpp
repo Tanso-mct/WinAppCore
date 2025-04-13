@@ -1,6 +1,6 @@
-#include "pch.h"
-
-#include "WACore.h"
+#include "WinAppCore_Test/pch.h"
+#include "WinAppCore/include/WACore.h"
+#pragma comment(lib, "WinAppCore.lib")
 
 TEST(WinAppCore_console, Cout)
 {
